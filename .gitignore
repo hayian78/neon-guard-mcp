@@ -1,0 +1,13 @@
+# Python
+.venv/
+__pycache__/
+*.egg-info/
+dist/
+build/
+
+# Environment and secrets — NEVER commit these
+.env
+
+# Live config and state — contains runtime settings and provenance tracking
+neon-guard.json
+.neon-guard-state.json

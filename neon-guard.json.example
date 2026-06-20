@@ -1,0 +1,15 @@
+{
+  "allowed_projects": ["replace-with-your-neon-project-id"],
+  "branch_naming_prefix": "ai-dev-",
+  "enforce_parent_branch": "main",
+  "branch_data_mode": "schema-only",
+  "branch_expiry_hours": 24,
+  "allow_branch_deletion": false,
+  "max_ai_branches": 10,
+  "connection": {
+    "default_database": "neondb",
+    "default_role": "neon_guard_ai",
+    "pooled": true
+  },
+  "disabled_tools": []
+}

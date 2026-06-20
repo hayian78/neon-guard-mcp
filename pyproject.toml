@@ -10,6 +10,19 @@ description = "A local security proxy MCP server for Neon's serverless Postgres 
 readme = "README.md"
 license = { text = "MIT" }
 authors = [{ name = "James", email = "james@fusedair.com.au" }]
+keywords = ["mcp", "model-context-protocol", "neon", "postgres", "security", "claude", "proxy"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security",
+    "Topic :: Database",
+    "Topic :: Software Development :: Libraries",
+]
 dependencies = [
     # Floor pinned to the verified-good minor: this is the process that holds
     # the master key, and mask_error_details/show_banner behavior matters.
@@ -26,6 +39,11 @@ dev = [
 
 [project.scripts]
 neon-guard-mcp = "neon_guard_mcp.server:main"
+
+[project.urls]
+Homepage = "https://github.com/hayian78/neon-guard-mcp"
+Repository = "https://github.com/hayian78/neon-guard-mcp"
+Issues = "https://github.com/hayian78/neon-guard-mcp/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/neon_guard_mcp"]

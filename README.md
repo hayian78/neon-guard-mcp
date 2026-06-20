@@ -155,7 +155,7 @@ Add this to your project's `.mcp.json` (or `~/.claude/mcp.json` for global use):
       "command": "uvx",
       "args": ["neon-guard-mcp==0.1.0"],
       "env": {
-        "NEON_API_KEY": "napi_...",
+        "NEON_API_KEY": "${NEON_API_KEY}",
         "NEON_GUARD_CONFIG": "/absolute/path/to/neon-guard.json"
       }
     }
@@ -165,7 +165,52 @@ Add this to your project's `.mcp.json` (or `~/.claude/mcp.json` for global use):
 
 > **Important:** The `env` block is passed only to the `neon-guard-mcp` subprocess. Claude Code does not forward it to the LLM context. `NEON_API_KEY` never appears in any tool call, tool result, or conversation message.
 
-Use an absolute path for `NEON_GUARD_CONFIG` to avoid ambiguity about the working directory at startup.
+Note the `"${NEON_API_KEY}"` reference: Claude Code expands `${VAR}` (and `${VAR:-default}`) from your host environment **at server-launch time**, so the literal secret stays out of the config file. Use an absolute path for `NEON_GUARD_CONFIG` to avoid ambiguity about the working directory at startup.
+
+---
+
+## Securing the master key
+
+Claude Code passes `NEON_API_KEY` to the proxy as a **process environment variable** when it launches the server — that is the only way the key reaches the proxy, and it never reaches the model. But Claude Code does **not** encrypt this value anywhere. How you supply it is up to you; here are the options, most secure first.
+
+> ⚠️ **Myth:** "`claude mcp add --env` stores the key encrypted in `~/.claude.json`." **False.** It is stored as **plaintext JSON**. Treat anything you put in a config file or `~/.claude.json` as readable by anyone (or anything) with access to that file.
+
+**1. Secrets manager (recommended).** The literal key never lands in any file — it lives in your vault and is injected into the environment only at launch. With the [1Password CLI](https://developer.1password.com/docs/cli/), reference the key with an `op://` secret reference and let `op run` resolve it:
+
+```json
+{
+  "mcpServers": {
+    "neon-guard": {
+      "command": "op",
+      "args": ["run", "--", "uvx", "neon-guard-mcp==0.1.0"],
+      "env": {
+        "NEON_API_KEY": "op://Private/Neon/api-key",
+        "NEON_GUARD_CONFIG": "/absolute/path/to/neon-guard.json"
+      }
+    }
+  }
+}
+```
+
+The same pattern works with `aws-vault exec`, `vault`, `doppler run`, etc. — wrap the launch command, keep the secret in the manager.
+
+**2. Reference a host env var via `${...}` expansion.** Keep the real value in your shell environment (sourced from an uncommitted file or your secrets manager) and reference it — the config stays committable because it holds no secret:
+
+```bash
+export NEON_API_KEY="napi_…"   # from ~/.zshrc sourcing an uncommitted ~/.secrets, a vault, etc.
+```
+```json
+"env": { "NEON_API_KEY": "${NEON_API_KEY}" }
+```
+
+**3. Local scope via the CLI (fine for a personal machine — but plaintext at rest).** `--scope local` (the default) writes to `~/.claude.json`, which is **not** committed to git, so it's safe from your repo — but the value is plaintext on disk:
+
+```bash
+claude mcp add --scope local --env NEON_API_KEY="napi_…" \
+  neon-guard -- uvx neon-guard-mcp==0.1.0
+```
+
+**Never** hardcode the literal key in a **project-scoped `.mcp.json`** — that file is meant to be committed, so the secret would land in your git history in plaintext. Use `${NEON_API_KEY}` expansion or a secrets-manager wrapper there instead. (`neon-guard.json` and `.neon-guard-state.json` are already git-ignored, but the master key is never written to either of them — it only ever comes from the environment.)
 
 ---
 
